@@ -43,7 +43,6 @@ public class GitHubCommitsTabPanel extends AbstractIssueTabPanel {
     public String repositoryURL;
     public String repoLogin;
     public String repoName;
-    public String branch;
 
     private final PermissionManager permissionManager;
 
@@ -66,25 +65,15 @@ public class GitHubCommitsTabPanel extends AbstractIssueTabPanel {
         // https://github.com/api/v2/json/commits/show/mojombo/grit/5071bf9fbfb81778c456d62e111440fdc776f76c?branch=master
 
         String[] arrayCommitURL = commitURL.split("/");
-        String[] arrayBranch = commitURL.split("=");
 
-        String branch = "";
+        String repoURL = "https://github.com/" + arrayCommitURL[8] + "/" + arrayCommitURL[9];
+        logger.debug("RepoURL: " + repoURL);
 
-        if(arrayBranch.length == 1){
-            branch = "master";
-        }else{
-            branch = arrayBranch[1];
-        }
-
-        String repoBranchURL = "https://github.com/" + arrayCommitURL[8] + "/" + arrayCommitURL[9] + "/" + branch;
-        logger.debug("RepoBranchURL: " + repoBranchURL);
-
-        this.repositoryURL = repoBranchURL;
+        this.repositoryURL = repoURL;
         this.repoLogin = arrayCommitURL[8];
         this.repoName = arrayCommitURL[9];
-        this.branch = branch;
 
-        return repoBranchURL;
+        return repoURL;
     }
 
     public List getActions(Issue issue, User user) {
@@ -151,7 +140,7 @@ public class GitHubCommitsTabPanel extends AbstractIssueTabPanel {
             }
         }
 
-        return "<unknown branch>";
+        return "<?>";
     }
 
     public boolean showPanel(Issue issue, User user) {

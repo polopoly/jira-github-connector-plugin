@@ -43,11 +43,6 @@ public class GitHubCommits {
         return "https://github.com/api/v2/json/commits/show/" + path[3] + "/" + path[4] +"/";
     }
 
-    private String getBranchFromURL(){
-        String[] path = repositoryURL.split("/");
-        return path[5];
-    }
-
     // Only used for Private Github Repositories
     private String getAccessTokenParameter(){
         String accessToken = (String)pluginSettingsFactory.createSettingsForKey(projectKey).get("githubRepositoryAccessToken" + repositoryURL);
@@ -177,7 +172,7 @@ public class GitHubCommits {
             return refValue.substring(refValue.lastIndexOf("/") + 1);
         }
 
-        return "<unknown branch>";
+        return "<?>";
     }
 
     public String syncCommits(Integer pageNumber){
@@ -195,7 +190,7 @@ public class GitHubCommits {
                 JSONObject jsonCommits = new JSONObject(commitsAsJSON);
                 JSONArray commits = jsonCommits.getJSONArray("commits");
 
-                String refValue = (String) jsonCommits.get("ref");
+                String refValue = (jsonCommits.has("ref")) ? jsonCommits.getString("ref") : null;
 
                 for (int i = 0; i < commits.length(); ++i) {
                     String message = commits.getJSONObject(i).getString("message").toLowerCase();
@@ -248,7 +243,7 @@ public class GitHubCommits {
             JSONObject jsonCommits = new JSONObject(payload);
             JSONArray commits = jsonCommits.getJSONArray("commits");
 
-            String refValue = (String) jsonCommits.get("ref");
+            String refValue = (jsonCommits.has("ref")) ? jsonCommits.getString("ref") : null;
 
             for (int i = 0; i < commits.length(); ++i) {
                 String message = commits.getJSONObject(i).getString("message").toLowerCase();
@@ -280,27 +275,19 @@ public class GitHubCommits {
     private String getRepositoryURLFromCommitURL(String commitURL){
 
         // Commit URL example
-        // https://github.com/api/v2/json/commits/show/mojombo/grit/5071bf9fbfb81778c456d62e111440fdc776f76c?branch=master
+        // https://github.com/api/v2/json/commits/show/mojombo/grit/5071bf9fbfb81778c456d62e111440fdc776f76c
 
         String[] arrayCommitURL = commitURL.split("/");
-        String[] arrayBranch = commitURL.split("=");
 
-        String branch = "";
+        String repoURL = "https://github.com/" + arrayCommitURL[8] + "/" + arrayCommitURL[9];
+        logger.debug("GitHubCommits.getRepositoryURLFromCommitURL() - RepoURL: " + repoURL);
 
-        if(arrayBranch.length == 1){
-            branch = "master";
-        }else{
-            branch = arrayBranch[1];
-        }
-
-        String repoBranchURL = "https://github.com/" + arrayCommitURL[8] + "/" + arrayCommitURL[9] + "/" + branch;
-        logger.debug("GitHubCommits.getRepositoryURLFromCommitURL() - RepoBranchURL: " + repoBranchURL);
-
-        return repoBranchURL;
+        return repoURL;
     }
 
     // Manages the entry of multiple Github commit id hash ids associated with an issue
-    // urls look like - https://github.com/api/v2/json/commits/show/mojombo/grit/5071bf9fbfb81778c456d62e111440fdc776f76c?branch=master
+    // urls look like - https://github.com/api/v2/json/commits/show/mojombo/grit/5071bf9fbfb81778c456d62e111440fdc776f76c
+
     private void addCommitID(String issueId, String commitId, String branch){
         try{
             logger.debug("GitHubCommits.addCommitID()");

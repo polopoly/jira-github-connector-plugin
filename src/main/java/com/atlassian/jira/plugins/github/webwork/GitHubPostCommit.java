@@ -42,7 +42,7 @@ public class GitHubPostCommit extends JiraWebActionSupport {
             JSONObject jsonRepository = jsonPayload.getJSONObject("repository");
 
             String baseRepositoryURL = jsonRepository.getString("url");
-            String url = baseRepositoryURL + "/" + branch;
+            String url = baseRepositoryURL;
 
             GitHubCommits repositoryCommits = new GitHubCommits(pluginSettingsFactory);
             repositoryCommits.repositoryURL = url;
@@ -69,9 +69,4 @@ public class GitHubPostCommit extends JiraWebActionSupport {
     private String projectKey = "";
     public void setProjectKey(String value){this.projectKey = value;}
     public String getProjectKey(){return projectKey;}
-
-    // GitHub Repository URL
-    private String branch = "";
-    public void setBranch(String value){this.branch = value;}
-    public String getBranch(){return branch;}
 }
