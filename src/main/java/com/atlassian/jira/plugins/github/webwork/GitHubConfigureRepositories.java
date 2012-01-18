@@ -79,14 +79,6 @@ public class GitHubConfigureRepositories extends JiraWebActionSupport {
             url = url.replaceFirst("http:","https:");
         }
 
-        // Add default branch of 'master' to URL if missing
-        String[] urlArray = url.split("/");
-
-        if(urlArray.length == 5){
-            url += "/master";
-            urlArray = url.split("/");
-        }
-
         if (validations.equals("")){
             if (nextAction.equals("AddRepository")){
 
@@ -120,14 +112,14 @@ public class GitHubConfigureRepositories extends JiraWebActionSupport {
 
                 }
 
-                postCommitURL = "GitHubPostCommit.jspa?projectKey=" + projectKey + "&branch=" + urlArray[urlArray.length-1];
+                postCommitURL = "GitHubPostCommit.jspa?projectKey=" + projectKey;
 
                 logger.debug(postCommitURL);
 
             }
 
             if (nextAction.equals("ShowPostCommitURL")){
-                postCommitURL = "GitHubPostCommit.jspa?projectKey=" + projectKey + "&branch=" + urlArray[urlArray.length-1];
+                postCommitURL = "GitHubPostCommit.jspa?projectKey=" + projectKey;
             }
 
             if (nextAction.equals("DeleteRepository")){
@@ -250,14 +242,6 @@ public class GitHubConfigureRepositories extends JiraWebActionSupport {
 
     public String getProjectName(){
         return cm.getProjectManager().getProjectObjByKey(projectKey).getName();
-    }
-
-    // Used to provide URLs on the repository management screen that go to actual pages
-    // as the service does not support repo urls with branches
-    public String getRepositoryURLWithoutBranch(String repoURL){
-
-        Integer lastSlash = repoURL.lastIndexOf("/");
-        return repoURL.substring(0,lastSlash);
     }
 
     public String escape(String unescapedHTML){
