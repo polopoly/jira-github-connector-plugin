@@ -1,33 +1,23 @@
 package com.atlassian.jira.plugins.github.webwork;
 
-import com.atlassian.crowd.embedded.api.User;
-import com.atlassian.jira.ComponentManager;
-import com.atlassian.jira.issue.IssueManager;
-import com.atlassian.jira.issue.comments.Comment;
-import com.atlassian.jira.util.json.JSONArray;
-import com.atlassian.jira.util.json.JSONException;
-import com.atlassian.jira.util.json.JSONObject;
-import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.HashSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.atlassian.jira.issue.comments.CommentManager;
-import com.atlassian.jira.issue.MutableIssue;
+import com.atlassian.jira.util.json.JSONArray;
+import com.atlassian.jira.util.json.JSONException;
+import com.atlassian.jira.util.json.JSONObject;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
 
 public class GitHubCommits {
 
@@ -60,15 +50,13 @@ public class GitHubCommits {
 
     // Only used for Private Github Repositories
     private String getAccessTokenParameter(){
-
         String accessToken = (String)pluginSettingsFactory.createSettingsForKey(projectKey).get("githubRepositoryAccessToken" + repositoryURL);
 
         if (accessToken == null){
             return "";
-        }else{
+        } else{
             return "&access_token=" + accessToken;
         }
-
     }
 
     private String getCommitsList(Integer pageNumber){
@@ -80,7 +68,6 @@ public class GitHubCommits {
         String line;
         String result = "";
         try {
-
             logger.debug("GitHubCommits - Commits URL - " + this.inferCommitsURL() + "?page=" + Integer.toString(pageNumber) + this.getAccessTokenParameter() );
             url = new URL(this.inferCommitsURL() + "?page=" + Integer.toString(pageNumber) + this.getAccessTokenParameter());
             conn = (HttpURLConnection) url.openConnection();
@@ -95,7 +82,7 @@ public class GitHubCommits {
             // Sets current page status for UI feedback
             pluginSettingsFactory.createSettingsForKey(projectKey).put("currentsync" + repositoryURL + projectKey, pageNumber.toString());
 
-        }catch (MalformedURLException e){
+        } catch (MalformedURLException e){
             logger.debug("GitHubCommits.MalformedException()");
             //e.printStackTrace();
             if(pageNumber.equals(1)){
@@ -112,7 +99,6 @@ public class GitHubCommits {
             }
 
             pluginSettingsFactory.createSettingsForKey(projectKey).put("currentsync" + repositoryURL + projectKey, "complete");
-
         }
 
         return result;
@@ -170,7 +156,7 @@ public class GitHubCommits {
 
             if (pluginSettingsFactory.createSettingsForKey(projectKey).get(commitType + repositoryURL) == null){
                 commitCount = 0;
-            }else{
+            } else{
                 String stringCount = (String)pluginSettingsFactory.createSettingsForKey(projectKey).get(commitType + repositoryURL);
                 commitCount = Integer.parseInt(stringCount) + 1;
             }
@@ -178,14 +164,20 @@ public class GitHubCommits {
             pluginSettingsFactory.createSettingsForKey(projectKey).put(commitType + repositoryURL, Integer.toString(commitCount));
 
             return commitCount;
-        }catch (Exception e){
+        } catch (Exception e){
            logger.debug("GitHubCommits.incrementCommitCount - exception caught");
            int commitCount;
            commitCount = 0;
            return commitCount;
         }
+    }
 
+    private String getBranchNameFromRef(final String refValue) {
+        if (refValue != null && refValue.indexOf("/") != -1 && !refValue.endsWith("/")) {
+            return refValue.substring(refValue.lastIndexOf("/") + 1);
+        }
 
+        return "<unknown branch>";
     }
 
     public String syncCommits(Integer pageNumber){
@@ -202,6 +194,8 @@ public class GitHubCommits {
             try{
                 JSONObject jsonCommits = new JSONObject(commitsAsJSON);
                 JSONArray commits = jsonCommits.getJSONArray("commits");
+
+                String refValue = (String) jsonCommits.get("ref");
 
                 for (int i = 0; i < commits.length(); ++i) {
                     String message = commits.getJSONObject(i).getString("message").toLowerCase();
@@ -222,10 +216,9 @@ public class GitHubCommits {
                             String issueId = (String)extractedIssues.get(j).toString().toUpperCase();
                             logger.debug("GitHubCommits.syncCommits() - Found issueId: " + issueId + " in commit " + commit_id);
 
-                            addCommitID(issueId, commit_id, getBranchFromURL());
+                            addCommitID(issueId, commit_id, getBranchNameFromRef(refValue));
                             incrementCommitCount("JIRACommitTotal");
                         }
-
                     }else{
                         incrementCommitCount("NonJIRACommitTotal");
                     }
@@ -235,7 +228,6 @@ public class GitHubCommits {
                 messages += this.syncCommits(nextCommitPage);
 
             }catch (JSONException e){
-                //e.printStackTrace();
                 pluginSettingsFactory.createSettingsForKey(projectKey).put("currentsync" + repositoryURL + projectKey, "complete");
                 messages = "GitHub Repository can't be found or incorrect credentials.";
             }
@@ -243,13 +235,9 @@ public class GitHubCommits {
         }
 
         return messages;
-
     }
 
-
-
     public String postReceiveHook(String payload){
-
         Date date = new Date();
         pluginSettingsFactory.createSettingsForKey(projectKey).put("githubLastSyncTime" + repositoryURL, date.toString());
 
@@ -259,6 +247,8 @@ public class GitHubCommits {
         try{
             JSONObject jsonCommits = new JSONObject(payload);
             JSONArray commits = jsonCommits.getJSONArray("commits");
+
+            String refValue = (String) jsonCommits.get("ref");
 
             for (int i = 0; i < commits.length(); ++i) {
                 String message = commits.getJSONObject(i).getString("message").toLowerCase();
@@ -271,7 +261,7 @@ public class GitHubCommits {
 
                         for (int j=0; j < extractedIssues.size(); ++j){
                             String issueId = (String)extractedIssues.get(j).toString().toUpperCase();
-                            addCommitID(issueId, commit_id, getBranchFromURL());
+                            addCommitID(issueId, commit_id, getBranchNameFromRef(refValue));
                             incrementCommitCount("JIRACommitTotal");
                         }
 
@@ -279,16 +269,12 @@ public class GitHubCommits {
                     incrementCommitCount("NonJIRACommitTotal");
                 }
             }
-
-
         }catch (JSONException e){
             e.printStackTrace();
             return "exception";
         }
 
         return messages;
-
-
     }
 
     private String getRepositoryURLFromCommitURL(String commitURL){
@@ -309,6 +295,7 @@ public class GitHubCommits {
 
         String repoBranchURL = "https://github.com/" + arrayCommitURL[8] + "/" + arrayCommitURL[9] + "/" + branch;
         logger.debug("GitHubCommits.getRepositoryURLFromCommitURL() - RepoBranchURL: " + repoBranchURL);
+
         return repoBranchURL;
     }
 
@@ -348,7 +335,6 @@ public class GitHubCommits {
 
     }
 
-
     // Removes a specific commit_id (URL) from the saved array
     private void removeCommitID(String issueId, String URLCommitID){
         try{
@@ -377,8 +363,6 @@ public class GitHubCommits {
         }
 
     }
-
-
 
     // Manages the recording of items ids for a JIRA project + Repository Pair so that we know
     // which issues within a project have commits associated with them
@@ -438,11 +422,9 @@ public class GitHubCommits {
                         }
                     }
                 }
-
             }
         }catch(Exception e){
             logger.debug("GitHubCommits.removeRepositoryIssueIDs - exception caught");
         }
     }
-
 }

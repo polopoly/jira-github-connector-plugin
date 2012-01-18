@@ -1,23 +1,5 @@
 package com.atlassian.jira.plugins.github.issuetabpanels;
 
-import com.atlassian.core.util.StringUtils;
-import com.atlassian.core.util.collection.EasyList;
-import com.atlassian.jira.config.properties.PropertiesManager;
-import com.atlassian.jira.issue.Issue;
-import com.atlassian.jira.issue.tabpanels.GenericMessageAction;
-import com.atlassian.jira.plugin.issuetabpanel.AbstractIssueTabPanel;
-import com.atlassian.jira.util.json.JSONArray;
-import com.atlassian.jira.util.json.JSONException;
-import com.atlassian.jira.util.json.JSONObject;
-import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
-import com.opensymphony.user.User;
-import com.atlassian.jira.plugins.github.webwork.GitHubCommits;
-
-import com.atlassian.jira.web.action.JiraWebActionSupport;
-
-import com.atlassian.jira.security.PermissionManager;
-import com.atlassian.jira.security.Permissions;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -25,10 +7,33 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.atlassian.core.util.StringUtils;
+import com.atlassian.core.util.collection.EasyList;
+import com.atlassian.jira.config.properties.PropertiesManager;
+import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.issue.tabpanels.GenericMessageAction;
+import com.atlassian.jira.plugin.issuetabpanel.AbstractIssueTabPanel;
+import com.atlassian.jira.plugins.github.webwork.GitHubCommits;
+import com.atlassian.jira.security.PermissionManager;
+import com.atlassian.jira.security.Permissions;
+import com.atlassian.jira.util.json.JSONArray;
+import com.atlassian.jira.util.json.JSONException;
+import com.atlassian.jira.util.json.JSONObject;
+import com.atlassian.jira.web.action.JiraWebActionSupport;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+import com.opensymphony.user.User;
 
 public class GitHubCommitsTabPanel extends AbstractIssueTabPanel {
 
@@ -103,9 +108,10 @@ public class GitHubCommitsTabPanel extends AbstractIssueTabPanel {
                     logger.debug("Found commit id" + commitArray.get(i));
 
                     gitHubCommits.repositoryURL = getRepositoryURLFromCommitURL(commitArray.get(i));
+
                     String commitDetails = gitHubCommits.getCommitDetails(commitArray.get(i));
 
-                    issueCommitActions = this.formatCommitDetails(commitDetails);
+                    issueCommitActions = this.formatCommitDetails(commitDetails, getBranchNameFromCommitURL(commitArray.get(i)));
                     GenericMessageAction action = new GenericMessageAction(issueCommitActions);
                     githubActions.add(action);
 
@@ -122,6 +128,30 @@ public class GitHubCommitsTabPanel extends AbstractIssueTabPanel {
 
         return EasyList.build(githubActions);
 
+    }
+
+    private String getBranchNameFromCommitURL(final String commitURL)
+    {
+        if (commitURL != null) {
+            try {
+                URL url = new URL(commitURL);
+                String queryPart = url.getQuery();
+
+                if (queryPart != null) {
+                    String parts[] = queryPart.split("&");
+
+                    for (String param : parts) {
+                        if ("branch".equals(param.split("=")[0])) {
+                            return param.split("=")[1];
+                        }
+                    }
+                }
+            } catch (MalformedURLException mfe) {
+                // ignore
+            }
+        }
+
+        return "<unknown branch>";
     }
 
     public boolean showPanel(Issue issue, User user) {
@@ -153,7 +183,7 @@ public class GitHubCommitsTabPanel extends AbstractIssueTabPanel {
     }
 
     private String formatCommitDate(Date commitDate) throws ParseException{
-        SimpleDateFormat sdfGithub = new SimpleDateFormat("MMM d yyyy KK:mm:ss");
+        SimpleDateFormat sdfGithub = new SimpleDateFormat("MMM d yyyy KK:mm:ss a");
         return sdfGithub.format(commitDate);
     }
 
@@ -217,7 +247,7 @@ public class GitHubCommitsTabPanel extends AbstractIssueTabPanel {
 
     }
 
-    private String formatCommitDetails(String jsonDetails)
+    private String formatCommitDetails(String jsonDetails, String branchName)
     {
 
         logger.debug(jsonDetails);
@@ -259,21 +289,22 @@ public class GitHubCommitsTabPanel extends AbstractIssueTabPanel {
             String commitMessage = extract(commit, "message");
             String gravatarUrl = "";
             String userName = "";
+
             try
             {
                 JSONObject githubUser = new JSONObject(getUserDetails(login));
-                
+
                 JSONObject user = githubUser.getJSONObject("user");
                 userName = extract(user, "name");
                 String gravatarHash = extract(user, "gravatar_id");
                 gravatarUrl = "https://secure.gravatar.com/avatar/" + gravatarHash + "?s=60";
-    
+
             }
             catch (JSONException e)
             {
                 logger.warn("Error retrieving user info. Login: '" + login + "'.");
             }
-            
+
             String htmlParentHashes = "";
             if (commit.has("parents"))
             {
@@ -425,6 +456,7 @@ public class GitHubCommitsTabPanel extends AbstractIssueTabPanel {
                     "<tr><td style='color: #757575'>Commit:</td><td><a href='#commit_url' target='_new'>#commit_hash</a></td></tr>" +
                     "<tr><td style='color: #757575'>Tree:</td><td><a href='#tree_url' target='_new'>#tree_hash</a></td></tr>" +
                     htmlParentHashes +
+                    "<tr><td style='color: #757575'>Branch:</td><td>#branch_name</td></tr>" +
                     "</table>" +
                     "</div>" +
                     "</td>" +
@@ -455,6 +487,8 @@ public class GitHubCommitsTabPanel extends AbstractIssueTabPanel {
             htmlCommitEntry = htmlCommitEntry.replace("#tree_url", "https://github.com/" + login + "/" + projectName + "/tree/" + commit_hash);
 
             htmlCommitEntry = htmlCommitEntry.replace("#tree_hash", commitTree);
+            htmlCommitEntry = htmlCommitEntry.replace("#branch_name", branchName);
+
             return htmlCommitEntry;
 
             // Catches invalid or removed GitHub IDs, but errors are suppressed as they typically

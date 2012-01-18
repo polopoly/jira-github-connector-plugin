@@ -1,15 +1,11 @@
 package com.atlassian.jira.plugins.github.webwork;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.atlassian.jira.util.json.JSONObject;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
-
-import java.util.Enumeration;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -28,11 +24,6 @@ public class GitHubPostCommit extends JiraWebActionSupport {
     }
 
     protected void doValidation() {
-
-        if (branch.equals("")){
-            validations += "Missing Required GitHub 'branch' parameter. <br/>";
-        }
-
         if (projectKey.equals("")){
             validations += "Missing Required 'projectKey' parameter. <br/>";
         }
@@ -40,7 +31,6 @@ public class GitHubPostCommit extends JiraWebActionSupport {
         if (payload.equals("")){
             validations += "Missing Required GitHub 'payload' parameter. <br/>";
         }
-
     }
 
     protected String doExecute() throws Exception {
@@ -61,7 +51,6 @@ public class GitHubPostCommit extends JiraWebActionSupport {
             // Starts actual search of commits via GitAPI, "1" is the first
             // page of commits to be returned via the API
             validations = repositoryCommits.postReceiveHook(payload);
-
         }
 
         return "postcommit";
@@ -85,5 +74,4 @@ public class GitHubPostCommit extends JiraWebActionSupport {
     private String branch = "";
     public void setBranch(String value){this.branch = value;}
     public String getBranch(){return branch;}
-
 }

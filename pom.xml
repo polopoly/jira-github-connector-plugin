@@ -129,8 +129,8 @@
     </build>
  
     <properties>
-        <jira.version>4.3.1</jira.version>
-        <jira.data.version>4.3.1</jira.data.version>
+        <jira.version>4.3.4</jira.version>
+        <jira.data.version>4.3.4</jira.data.version>
         <streams.version>4.0.3</streams.version>
     </properties>
 
