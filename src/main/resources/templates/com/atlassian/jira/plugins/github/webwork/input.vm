@@ -166,7 +166,7 @@
 
                     #foreach ($repository in $action.getProjectRepositories($action.escape($action.getProjectKey())))
                         <tr>
-                            <td><a href="$action.getRepositoryURLWithoutBranch($repository)" target="_new">$action.escape($repository)</a></td>
+                            <td><a href="$repository" target="_new">$action.escape($repository)</a></td>
                             <td>$action.escape($action.getProjectKey())</td>
                             <td width="260px">
                                 <a href="${baseurl}/secure/admin/GitHubConfigureRepositories.jspa?url=$repository&projectKey=$action.escape($action.getProjectKey())&nextAction=ForceSync&mode=$action.escape($action.getMode())&atl_token=$atl_token">Force Sync</a> |
@@ -194,7 +194,7 @@
 
                     #foreach ($repository in $action.getProjectRepositories($project.key))
                         <tr>
-                            <td><a href="$action.getRepositoryURLWithoutBranch($repository)" target="_new">$action.escape($repository)</a></td>
+                            <td><a href="$repository" target="_new">$action.escape($repository)</a></td>
                             <td>$action.escape($project.key)</td>
                             <td width="260px">
                                 <a href="${baseurl}/secure/admin/GitHubConfigureRepositories.jspa?url=$action.escape($repository)&projectKey=$action.escape($project.key)&nextAction=ForceSync&mode=$action.escape($action.getMode())&atl_token=$atl_token">Force Sync</a> |
