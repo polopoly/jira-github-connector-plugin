@@ -1,13 +1,16 @@
 package com.atlassian.jira.plugins.github.webwork;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,6 +40,10 @@ public class GitHubCommits {
         return "https://github.com/api/v2/json/commits/list/" + path[3] + "/" + path[4] + "/" + path[5];
     }
 
+    private String inferBranchesURL() {
+        String[] path = repositoryURL.split("/");
+        return "http://github.com/api/v2/json/repos/show/" + path[3] + "/" + path[4] +"/branches";
+    }
     // Generate a URL for pulling a single commits details (diff and author)
     private String inferCommitDetailsURL(){
         String[] path = repositoryURL.split("/");
@@ -54,6 +61,35 @@ public class GitHubCommits {
         }
     }
 
+    private ArrayList<String> getBranchNames() throws Exception {
+        logger.debug("GitHubCommits.getBranchNames()");
+        URL url;
+        HttpURLConnection conn;
+
+        BufferedReader rd;
+        String line;
+        String result = "";
+
+        url = new URL(this.inferBranchesURL());
+        conn = (HttpURLConnection) url.openConnection();
+        conn.setInstanceFollowRedirects(true);
+        conn.setRequestMethod("GET");
+        rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+
+        while ((line = rd.readLine()) != null) {
+                result += line;
+            }
+        rd.close();
+
+        JSONObject jsonResult = new JSONObject(result);
+        JSONObject jsonBranches = jsonResult.getJSONObject("branches");
+        Iterator<String> branchIterator = jsonBranches.keys();
+        ArrayList<String> branchList = new ArrayList<String>();
+        while (branchIterator.hasNext()) {
+            branchList.add(branchIterator.next());
+        }
+        return branchList;
+    }
     private String getCommitsList(Integer pageNumber){
         logger.debug("GitHubCommits.getCommitsList()");
         URL url;
@@ -174,6 +210,7 @@ public class GitHubCommits {
 
         return "<?>";
     }
+
 
     public String syncCommits(Integer pageNumber){
         logger.debug("GitHubCommits.syncCommits()");
