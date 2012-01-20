@@ -1,22 +1,16 @@
 package com.atlassian.jira.plugins.github.webwork;
 
-import com.atlassian.jira.config.properties.PropertiesManager;
-import com.atlassian.jira.project.Project;
-
-import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
-import com.atlassian.jira.web.action.JiraWebActionSupport;
-import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.atlassian.jira.web.action.JiraWebActionSupport;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
 
 public class GitHubOAuth2 extends JiraWebActionSupport {
 
@@ -36,7 +30,6 @@ public class GitHubOAuth2 extends JiraWebActionSupport {
         }
 
     }
-
 
     protected String doExecute() throws Exception {
 
@@ -59,9 +52,7 @@ public class GitHubOAuth2 extends JiraWebActionSupport {
 
                     // Verification Success
                         pluginSettingsFactory.createSettingsForKey(projectKey).put("githubRepositoryAccessToken" + privateRepositoryURL, access_token);
-
-                        String[] urlArray = privateRepositoryURL.split("/");
-                        postCommitURL = "GitHubPostCommit.jspa?projectKey=" + projectKey + "&branch=" + urlArray[urlArray.length-1];
+                        postCommitURL = "GitHubPostCommit.jspa?projectKey=" + projectKey;
                     }
             }
 
@@ -106,8 +97,6 @@ public class GitHubOAuth2 extends JiraWebActionSupport {
         return result;
 
     }
-
-
 
     // GitHub Temporary Code
     private String code;

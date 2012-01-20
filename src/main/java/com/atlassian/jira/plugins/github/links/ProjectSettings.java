@@ -1,15 +1,15 @@
 package com.atlassian.jira.plugins.github.links;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import com.atlassian.jira.config.properties.PropertiesManager;
 import com.atlassian.jira.plugin.projectoperation.AbstractPluggableProjectOperation;
 import com.atlassian.jira.project.Project;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
 import com.opensymphony.user.User;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ProjectSettings extends AbstractPluggableProjectOperation
 {

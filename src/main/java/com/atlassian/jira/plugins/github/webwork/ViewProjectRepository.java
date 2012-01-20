@@ -1,17 +1,14 @@
 package com.atlassian.jira.plugins.github.webwork;
 
-import com.atlassian.jira.web.action.JiraWebActionSupport;
-import com.atlassian.jira.ComponentManager;
-import com.atlassian.jira.project.*;
-
-import java.util.*;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-
-import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+import java.util.Enumeration;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.atlassian.jira.ComponentManager;
+import com.atlassian.jira.project.Project;
+import com.atlassian.jira.web.action.JiraWebActionSupport;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
 
 public class ViewProjectRepository extends JiraWebActionSupport{
 

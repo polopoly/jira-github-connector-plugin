@@ -1,19 +1,11 @@
 package com.atlassian.jira.plugins.github.webwork;
 
-import com.atlassian.jira.ComponentManager;
-import com.atlassian.jira.config.properties.PropertiesManager;
-import com.atlassian.jira.issue.comments.CommentManager;
-import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
-import com.atlassian.jira.web.action.JiraWebActionSupport;
-import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
-
-import com.atlassian.jira.user.util.UserManager;
-import com.atlassian.crowd.embedded.api.User;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
+import com.atlassian.jira.web.action.JiraWebActionSupport;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
 
 public class ConfigureGlobalSettings extends JiraWebActionSupport {
 
@@ -63,7 +55,6 @@ public class ConfigureGlobalSettings extends JiraWebActionSupport {
 
     }
 
-
     public String getSavedClientSecret(){
 
         String savedClientSecret = (String)pluginSettingsFactory.createGlobalSettings().get("githubRepositoryClientSecret");
@@ -85,7 +76,6 @@ public class ConfigureGlobalSettings extends JiraWebActionSupport {
             return savedClientID;
         }
     }
-
 
     public String getSavedJiraGitHubUser(){
         String jiraGitHubUser = (String)pluginSettingsFactory.createGlobalSettings().get("githubJiraGitHubUser");

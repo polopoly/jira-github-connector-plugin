@@ -1,24 +1,20 @@
 package com.atlassian.jira.plugins.github.webwork;
 
 
-import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
-import com.atlassian.jira.ComponentManager;
-import com.atlassian.jira.config.properties.PropertiesManager;
-import com.atlassian.jira.issue.IssueManager;
-import com.atlassian.jira.issue.MutableIssue;
-import com.atlassian.jira.issue.comments.Comment;
-import com.atlassian.jira.issue.comments.CommentManager;
-import com.atlassian.jira.project.Project;
-import com.atlassian.jira.web.action.JiraWebActionSupport;
-import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.radeox.util.logging.SystemOutLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.atlassian.jira.ComponentManager;
+import com.atlassian.jira.project.Project;
+import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
+import com.atlassian.jira.web.action.JiraWebActionSupport;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
 
 
 public class GitHubConfigureRepositories extends JiraWebActionSupport {
